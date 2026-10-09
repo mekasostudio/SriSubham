@@ -1,0 +1,5 @@
+- [x] Create Srisubham Ladies Hostel’s design system and complete homepage.
+- [x] Build interactive four-bed architectural cutaway with static fallback.
+- [x] Add rooms, amenities, gallery, location, contact, FAQ, and policy pages.
+- [x] Add explicitly demo-only enquiries, validation, and configurable contact alternatives.
+- [x] Verify navigation, gallery, enquiries, 3D, and mobile layouts.

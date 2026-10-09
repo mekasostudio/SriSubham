@@ -1,0 +1,7 @@
+import { createFileRoute } from '@tanstack/react-router';
+import { PageTop,AmenitiesGrid,SafetySection } from '@/components/Content';
+import { EnquiryCTA } from '@/components/SiteLayout';
+import { study,imageryDisclosure } from '@/data/property';
+import { pageHead } from '@/lib/metadata';
+export const Route=createFileRoute('/amenities')({head:()=>pageHead('Amenities & Living','Explore the amenity checklist and accommodation policies for Srisubham Ladies Hostel. Facilities await owner confirmation.'),component:AmenityPage});
+function AmenityPage(){return <><PageTop eyebrow="Thoughtful everyday living" title="The little things. Considered." description="Comfort is in the details. Review the facilities and policies that matter to your routine."/><section className="section"><div className="site-width"><div className="editorial"><div><p className="eyebrow mb-4">A space for your everyday</p><h2 className="section-title">Less to worry about.<br/>More room to <em>be you.</em></h2><p className="section-intro mt-5">The checklist below is awaiting owner confirmation. Only confirmed facilities will be listed as included in your stay.</p></div><img src={study} width={1024} height={1024} loading="lazy" className="w-full h-80 object-cover rounded-lg" alt="AI-generated study area concept"/></div><AmenitiesGrid/><p className="sample-note mt-4">{imageryDisclosure}</p></div></section><SafetySection/><EnquiryCTA/></>;}
