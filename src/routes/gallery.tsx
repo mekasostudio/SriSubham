@@ -1,12 +1,125 @@
-import { createFileRoute,useNavigate } from '@tanstack/react-router';
-import { useEffect,useState } from 'react';
-import { ArrowLeft,ArrowRight,Expand } from 'lucide-react';
-import { Dialog,DialogContent,DialogTitle,DialogDescription } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { PageTop } from '@/components/Content';
-import { EnquiryCTA } from '@/components/SiteLayout';
-import { gallery,imageryDisclosure } from '@/data/property';
-import { pageHead } from '@/lib/metadata';
-const categories=['All spaces','Rooms','Everyday spaces','Community'];
-export const Route=createFileRoute('/gallery')({validateSearch:(s:Record<string,unknown>)=>({category:typeof s['category']==='string'&&categories.includes(s['category'])?s['category']:'All spaces'}),head:()=>pageHead('The Gallery','Discover Srisubham Ladies Hostel room, study, lounge and shared-space concepts in the gallery.'),component:GalleryPage});
-function GalleryPage(){const {category}=Route.useSearch();const navigate=useNavigate();const [active,setActive]=useState<number|null>(null);const filtered=gallery.filter(g=>category==='All spaces'||g.category===category);const current=active===null?null:filtered[active];const next=()=>setActive(i=>i===null?0:(i+1)%filtered.length);const previous=()=>setActive(i=>i===null?0:(i-1+filtered.length)%filtered.length);useEffect(()=>{if(active===null)return;const handler=(e:KeyboardEvent)=>{if(e.key==='ArrowRight')setActive(i=>i===null?0:(i+1)%filtered.length);if(e.key==='ArrowLeft')setActive(i=>i===null?0:(i-1+filtered.length)%filtered.length);};window.addEventListener('keydown',handler);return()=>window.removeEventListener('keydown',handler);},[active,filtered.length]);return <><PageTop eyebrow="A closer look" title="Picture your everyday." description="From your own quiet corner to spaces that bring everyone together. A little glimpse of what home can feel like."/><section className="section"><div className="site-width"><div className="flex flex-wrap justify-center gap-2 mb-8">{categories.map(c=><Button key={c} variant={category===c?'hospitality':'soft'} onClick={()=>{setActive(null);navigate({to:'/gallery',search:{category:c}});}}>{c}</Button>)}</div><p className="sample-note text-center mb-8">{imageryDisclosure}</p><div className="gallery-grid">{filtered.map((g,i)=><Button key={g.title} variant="ghost" className="gallery-tile" onClick={()=>setActive(i)} aria-label={`View ${g.title}`}><img src={g.image} width={1024} height={1024} loading="lazy" alt={`${g.title} — generated concept`}/><span className="gallery-caption">{g.title} <Expand className="inline size-3 ml-2"/></span></Button>)}</div></div></section><Dialog open={active!==null} onOpenChange={open=>{if(!open)setActive(null);}}><DialogContent className="lightbox-content"><DialogTitle className="display text-3xl">{current?.title}</DialogTitle><DialogDescription>{imageryDisclosure}</DialogDescription>{current&&<img key={current.image} src={current.image} className="lightbox-image reveal" alt={`${current.title} — concept imagery`}/>}<div className="flex justify-between items-center"><Button variant="soft" size="icon" aria-label="Previous image" onClick={previous}><ArrowLeft/></Button><span className="sample-note">{active===null?0:active+1} / {filtered.length}</span><Button variant="soft" size="icon" aria-label="Next image" onClick={next}><ArrowRight/></Button></div></DialogContent></Dialog><EnquiryCTA/></>;}
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { ArrowLeft, ArrowRight, Expand } from "lucide-react";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { PageTop } from "@/components/Content";
+import { EnquiryCTA } from "@/components/SiteLayout";
+import { gallery, imageryDisclosure } from "@/data/property";
+import { pageHead } from "@/lib/metadata";
+const categories = ["All spaces", "Rooms", "Everyday spaces", "Community"];
+export const Route = createFileRoute("/gallery")({
+  validateSearch: (s: Record<string, unknown>) => ({
+    category:
+      typeof s["category"] === "string" && categories.includes(s["category"])
+        ? s["category"]
+        : "All spaces",
+  }),
+  head: () =>
+    pageHead(
+      "The Gallery",
+      "Discover Srisubham Ladies Hostel room, study, lounge and shared-space concepts in the gallery.",
+    ),
+  component: GalleryPage,
+});
+function GalleryPage() {
+  const { category } = Route.useSearch();
+  const navigate = useNavigate();
+  const [active, setActive] = useState<number | null>(null);
+  const filtered = gallery.filter((g) => category === "All spaces" || g.category === category);
+  const current = active === null ? null : filtered[active];
+  const next = () => setActive((i) => (i === null ? 0 : (i + 1) % filtered.length));
+  const previous = () =>
+    setActive((i) => (i === null ? 0 : (i - 1 + filtered.length) % filtered.length));
+  useEffect(() => {
+    if (active === null) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight") setActive((i) => (i === null ? 0 : (i + 1) % filtered.length));
+      if (e.key === "ArrowLeft")
+        setActive((i) => (i === null ? 0 : (i - 1 + filtered.length) % filtered.length));
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [active, filtered.length]);
+  return (
+    <>
+      <PageTop
+        eyebrow="A closer look"
+        title="Picture your everyday."
+        description="From your own quiet corner to spaces that bring everyone together. A little glimpse of what home can feel like."
+      />
+      <section className="section">
+        <div className="site-width">
+          <div className="flex flex-wrap justify-center gap-2 mb-8">
+            {categories.map((c) => (
+              <Button
+                key={c}
+                variant={category === c ? "hospitality" : "soft"}
+                onClick={() => {
+                  setActive(null);
+                  navigate({ to: "/gallery", search: { category: c } });
+                }}
+              >
+                {c}
+              </Button>
+            ))}
+          </div>
+          <p className="sample-note text-center mb-8">{imageryDisclosure}</p>
+          <div className="gallery-grid">
+            {filtered.map((g, i) => (
+              <Button
+                key={g.title}
+                variant="ghost"
+                className="gallery-tile"
+                onClick={() => setActive(i)}
+                aria-label={`View ${g.title}`}
+              >
+                <img
+                  src={g.image}
+                  width={1024}
+                  height={1024}
+                  loading="lazy"
+                  alt={`${g.title} — generated concept`}
+                />
+                <span className="gallery-caption">
+                  {g.title} <Expand className="inline size-3 ml-2" />
+                </span>
+              </Button>
+            ))}
+          </div>
+        </div>
+      </section>
+      <Dialog
+        open={active !== null}
+        onOpenChange={(open) => {
+          if (!open) setActive(null);
+        }}
+      >
+        <DialogContent className="lightbox-content">
+          <DialogTitle className="display text-3xl">{current?.title}</DialogTitle>
+          <DialogDescription>{imageryDisclosure}</DialogDescription>
+          {current && (
+            <img
+              key={current.image}
+              src={current.image}
+              className="lightbox-image reveal"
+              alt={`${current.title} — concept imagery`}
+            />
+          )}
+          <div className="flex justify-between items-center">
+            <Button variant="soft" size="icon" aria-label="Previous image" onClick={previous}>
+              <ArrowLeft />
+            </Button>
+            <span className="sample-note">
+              {active === null ? 0 : active + 1} / {filtered.length}
+            </span>
+            <Button variant="soft" size="icon" aria-label="Next image" onClick={next}>
+              <ArrowRight />
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <EnquiryCTA />
+    </>
+  );
+}

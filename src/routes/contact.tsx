@@ -1,19 +1,296 @@
-import { createFileRoute,useNavigate } from '@tanstack/react-router';
-import { useEffect,useRef,useState, type FormEvent } from 'react';
-import { ArrowUpRight,CalendarDays,MessageCircle,Download,CheckCircle2,Mail,Phone,MapPin } from 'lucide-react';
-import { PageTop,FAQList } from '@/components/Content';
-import { Button } from '@/components/ui/button';
-import { property,rooms } from '@/data/property';
-import { enquirySchema,enquiryText,whatsappUrl,type Enquiry } from '@/lib/enquiry';
-import { pageHead } from '@/lib/metadata';
-export const Route=createFileRoute('/contact')({validateSearch:(s:Record<string,unknown>)=>({intent:s['intent']==='visit'?'visit':'enquiry',room:typeof s['room']==='string'&&rooms.some(r=>r.id===s['room'])?s['room']:'undecided'}),head:()=>pageHead('Enquiries & Visits','Prepare a room enquiry or visit request for Srisubham Ladies Hostel. This client template is in demo mode.'),component:ContactPage});
-function ContactPage(){
- const {intent,room}=Route.useSearch();const navigate=useNavigate();const form=useRef<HTMLFormElement>(null);
- const [errors,setErrors]=useState<Record<string,string>>({});const [prepared,setPrepared]=useState<Enquiry|null>(null);const [notice,setNotice]=useState('');const last=useRef('');
- useEffect(()=>{setPrepared(null);setErrors({});setNotice('');last.current='';},[intent,room]);
- function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();const data=new FormData(e.currentTarget);const value={name:data.get('name'),phone:data.get('phone'),email:data.get('email'),moveIn:data.get('moveIn'),room:data.get('room'),budget:data.get('budget'),message:data.get('message'),consent:data.get('consent')==='on',intent,visitDate:data.get('visitDate')||undefined};const parsed=enquirySchema.safeParse(value);if(!parsed.success){const next:Record<string,string>={};for(const issue of parsed.error.issues)next[String(issue.path[0])]=issue.message;setErrors(next);setPrepared(null);setNotice('Please check the highlighted fields.');return;}setErrors({});const text=enquiryText(parsed.data);if(last.current===text){setNotice('This request is already prepared. You can download it below.');return;}last.current=text;setPrepared(parsed.data);setNotice('Demo request prepared — not sent, saved to a database, or confirmed.');}
- function download(){if(!prepared)return;const blob=new Blob([enquiryText(prepared)],{type:'text/plain'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='srisubham-ladies-hostel-enquiry.txt';a.click();URL.revokeObjectURL(url);}
- function whatsapp(){const data=prepared;const url=whatsappUrl(property.whatsapp,data?enquiryText(data):'Hello Srisubham Ladies Hostel, I would like to enquire about a room.');if(url){window.open(url,'_blank','noopener,noreferrer');}else{setNotice('WhatsApp is not configured yet. Please prepare and download your request; the owner must provide a real contact number before it can be sent.');}}
- const field=(name:string,label:string,type='text',required=true)=><div className={name==='name'?'full':''}><label htmlFor={name} className="form-label">{label}{required?' *':''}</label><input id={name} name={name} type={type} required={required} maxLength={name==='phone'?25:name==='email'?255:100} className="form-control" aria-invalid={!!errors[name]} aria-describedby={errors[name]?`${name}-error`:undefined}/>{errors[name]&&<p id={`${name}-error`} className="form-error">{errors[name]}</p>}</div>;
- return <><PageTop eyebrow="Let’s find your space" title={intent==='visit'?'Come a little closer.':'Your next chapter awaits.'} description="Tell us a little about yourself and the space you’re looking for. We’d love to help you feel at home."/><section className="section"><div className="site-width contact-layout"><aside><p className="eyebrow mb-5">A conversation starts here</p><h2 className="section-title">Let’s make room<br/>for <em>you.</em></h2><p className="section-intro mt-5">Room enquiries, a closer look, or questions from a parent — every detail matters.</p><div className="mt-8">{[{icon:Phone,label:'Phone',value:property.phone},{icon:Mail,label:'Email',value:property.email},{icon:MapPin,label:'Address',value:property.address}].map(c=><div className="policy-item flex gap-4" key={c.label}><c.icon className="size-4 mt-1 text-primary"/><div><h3>{c.label}</h3><p>{c.value||'To be provided by the property owner.'}</p></div></div>)}</div><Button variant="soft" className="mt-6" onClick={whatsapp}><MessageCircle/>WhatsApp Enquiry <ArrowUpRight/></Button><p className="sample-note mt-3">WhatsApp opens only after a real number is configured.</p></aside><div><div className="flex flex-wrap gap-2 mb-6"><Button variant={intent==='enquiry'?'hospitality':'soft'} onClick={()=>navigate({to:'/contact',search:{intent:'enquiry',room}})}><MessageCircle/>Room Enquiry</Button><Button variant={intent==='visit'?'hospitality':'soft'} onClick={()=>navigate({to:'/contact',search:{intent:'visit',room}})}><CalendarDays/>Schedule a Visit</Button></div><div className="demo-banner"><strong>Demo mode — enquiries are not delivered.</strong><br/>No booking or visit is confirmed. You can validate and download your request. Live enquiries require the owner’s contact details and an authorised delivery connection.</div><form ref={form} onSubmit={submit} noValidate><div className="form-grid">{field('name','Full name')}{field('phone','Phone number','tel')}{field('email','Email address','email')}{field('moveIn','Preferred move-in date','date')}<div><label htmlFor="room" className="form-label">Room-sharing preference *</label><select id="room" name="room" className="form-control" defaultValue={room} key={room}>{rooms.map(r=><option key={r.id} value={r.id}>{r.name}</option>)}<option value="undecided">Help me choose</option></select></div>{field('budget','Monthly budget (include currency)','text',false)}{intent==='visit'&&field('visitDate','Preferred visit date','date')}<div className="full col-span-2"><label htmlFor="message" className="form-label">Anything you’d like us to know?</label><textarea id="message" name="message" maxLength={1500} rows={4} className="form-control" placeholder="Your questions, preferences, or plans…"/></div></div><label className="flex gap-3 items-start mt-6 text-[11px] text-muted-foreground leading-relaxed"><input type="checkbox" name="consent" className="mt-1 accent-primary"/>I agree to use my contact details to prepare this enquiry. In demo mode, details stay on this page unless I download or share them. When live, they will be used only to respond about rooms or visits.</label>{errors['consent']&&<p className="form-error">{errors['consent']}</p>}<Button type="submit" variant="hospitality" className="mt-6">{intent==='visit'?'Prepare Visit Request':'Submit Enquiry'} <ArrowUpRight/></Button><p className="sample-note mt-3">Demo only · No payment taken · No booking confirmed</p></form>{notice&&<div role={Object.keys(errors).length?'alert':'status'} className="demo-banner mt-6"><p className="flex gap-2 items-start">{prepared&&<CheckCircle2 className="size-4 shrink-0 mt-1"/>}{notice}</p>{prepared&&<><div className="border-t border-border mt-4 pt-4 text-xs leading-7"><p>{prepared.name} · {rooms.find(r=>r.id===prepared.room)?.name||'Room to be decided'}</p><p>Preferred move-in: {prepared.moveIn}</p>{prepared.visitDate&&<p>Preferred visit: {prepared.visitDate}</p>}</div><div className="flex flex-wrap gap-3 mt-4"><Button variant="soft" onClick={download}><Download/>Download Request</Button><Button variant="soft" onClick={whatsapp}><MessageCircle/>WhatsApp Enquiry</Button></div></>}</div>}</div></div></section><section className="section bg-muted"><div className="site-width max-w-4xl"><h2 className="section-title mb-6">Before you <em>move in.</em></h2><FAQList limit={3}/></div></section></>;
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import {
+  ArrowUpRight,
+  CalendarDays,
+  MessageCircle,
+  Download,
+  CheckCircle2,
+  Mail,
+  Phone,
+  MapPin,
+} from "lucide-react";
+import { PageTop, FAQList } from "@/components/Content";
+import { Button } from "@/components/ui/button";
+import { property, rooms } from "@/data/property";
+import { enquirySchema, enquiryText, whatsappUrl, type Enquiry } from "@/lib/enquiry";
+import { pageHead } from "@/lib/metadata";
+export const Route = createFileRoute("/contact")({
+  validateSearch: (s: Record<string, unknown>) => ({
+    intent: s["intent"] === "visit" ? "visit" : "enquiry",
+    room:
+      typeof s["room"] === "string" && rooms.some((r) => r.id === s["room"])
+        ? s["room"]
+        : "undecided",
+  }),
+  head: () =>
+    pageHead(
+      "Enquiries & Visits",
+      "Prepare a room enquiry or visit request for Srisubham Ladies Hostel. This client template is in demo mode.",
+    ),
+  component: ContactPage,
+});
+function ContactPage() {
+  const { intent, room } = Route.useSearch();
+  const navigate = useNavigate();
+  const form = useRef<HTMLFormElement>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [prepared, setPrepared] = useState<Enquiry | null>(null);
+  const [notice, setNotice] = useState("");
+  const last = useRef("");
+  useEffect(() => {
+    setPrepared(null);
+    setErrors({});
+    setNotice("");
+    last.current = "";
+  }, [intent, room]);
+  function submit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const data = new FormData(e.currentTarget);
+    const value = {
+      name: data.get("name"),
+      phone: data.get("phone"),
+      email: data.get("email"),
+      moveIn: data.get("moveIn"),
+      room: data.get("room"),
+      budget: data.get("budget"),
+      message: data.get("message"),
+      consent: data.get("consent") === "on",
+      intent,
+      visitDate: data.get("visitDate") || undefined,
+    };
+    const parsed = enquirySchema.safeParse(value);
+    if (!parsed.success) {
+      const next: Record<string, string> = {};
+      for (const issue of parsed.error.issues) next[String(issue.path[0])] = issue.message;
+      setErrors(next);
+      setPrepared(null);
+      setNotice("Please check the highlighted fields.");
+      return;
+    }
+    setErrors({});
+    const text = enquiryText(parsed.data);
+    if (last.current === text) {
+      setNotice("This request is already prepared. You can download it below.");
+      return;
+    }
+    last.current = text;
+    setPrepared(parsed.data);
+    setNotice("Demo request prepared — not sent, saved to a database, or confirmed.");
+  }
+  function download() {
+    if (!prepared) return;
+    const blob = new Blob([enquiryText(prepared)], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "srisubham-ladies-hostel-enquiry.txt";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+  function whatsapp() {
+    const data = prepared;
+    const url = whatsappUrl(
+      property.whatsapp,
+      data
+        ? enquiryText(data)
+        : "Hello Srisubham Ladies Hostel, I would like to enquire about a room.",
+    );
+    if (url) {
+      window.open(url, "_blank", "noopener,noreferrer");
+    } else {
+      setNotice(
+        "WhatsApp is not configured yet. Please prepare and download your request; the owner must provide a real contact number before it can be sent.",
+      );
+    }
+  }
+  const field = (name: string, label: string, type = "text", required = true) => (
+    <div className={name === "name" ? "full" : ""}>
+      <label htmlFor={name} className="form-label">
+        {label}
+        {required ? " *" : ""}
+      </label>
+      <input
+        id={name}
+        name={name}
+        type={type}
+        required={required}
+        maxLength={name === "phone" ? 25 : name === "email" ? 255 : 100}
+        className="form-control"
+        aria-invalid={!!errors[name]}
+        aria-describedby={errors[name] ? `${name}-error` : undefined}
+      />
+      {errors[name] && (
+        <p id={`${name}-error`} className="form-error">
+          {errors[name]}
+        </p>
+      )}
+    </div>
+  );
+  return (
+    <>
+      <PageTop
+        eyebrow="Let’s find your space"
+        title={intent === "visit" ? "Come a little closer." : "Your next chapter awaits."}
+        description="Tell us a little about yourself and the space you’re looking for. We’d love to help you feel at home."
+      />
+      <section className="section">
+        <div className="site-width contact-layout">
+          <aside>
+            <p className="eyebrow mb-5">A conversation starts here</p>
+            <h2 className="section-title">
+              Let’s make room
+              <br />
+              for <em>you.</em>
+            </h2>
+            <p className="section-intro mt-5">
+              Room enquiries, a closer look, or questions from a parent — every detail matters.
+            </p>
+            <div className="mt-8">
+              {[
+                { icon: Phone, label: "Phone", value: property.phone },
+                { icon: Mail, label: "Email", value: property.email },
+                { icon: MapPin, label: "Address", value: property.address },
+              ].map((c) => (
+                <div className="policy-item flex gap-4" key={c.label}>
+                  <c.icon className="size-4 mt-1 text-primary" />
+                  <div>
+                    <h3>{c.label}</h3>
+                    <p>{c.value || "To be provided by the property owner."}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Button variant="soft" className="mt-6" onClick={whatsapp}>
+              <MessageCircle />
+              WhatsApp Enquiry <ArrowUpRight />
+            </Button>
+            <p className="sample-note mt-3">
+              WhatsApp opens only after a real number is configured.
+            </p>
+          </aside>
+          <div>
+            <div className="flex flex-wrap gap-2 mb-6">
+              <Button
+                variant={intent === "enquiry" ? "hospitality" : "soft"}
+                onClick={() => navigate({ to: "/contact", search: { intent: "enquiry", room } })}
+              >
+                <MessageCircle />
+                Room Enquiry
+              </Button>
+              <Button
+                variant={intent === "visit" ? "hospitality" : "soft"}
+                onClick={() => navigate({ to: "/contact", search: { intent: "visit", room } })}
+              >
+                <CalendarDays />
+                Schedule a Visit
+              </Button>
+            </div>
+            <div className="demo-banner">
+              <strong>Demo mode — enquiries are not delivered.</strong>
+              <br />
+              No booking or visit is confirmed. You can validate and download your request. Live
+              enquiries require the owner’s contact details and an authorised delivery connection.
+            </div>
+            <form ref={form} onSubmit={submit} noValidate>
+              <div className="form-grid">
+                {field("name", "Full name")}
+                {field("phone", "Phone number", "tel")}
+                {field("email", "Email address", "email")}
+                {field("moveIn", "Preferred move-in date", "date")}
+                <div>
+                  <label htmlFor="room" className="form-label">
+                    Room-sharing preference *
+                  </label>
+                  <select
+                    id="room"
+                    name="room"
+                    className="form-control"
+                    defaultValue={room}
+                    key={room}
+                  >
+                    {rooms.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.name}
+                      </option>
+                    ))}
+                    <option value="undecided">Help me choose</option>
+                  </select>
+                </div>
+                {field("budget", "Monthly budget (include currency)", "text", false)}
+                {intent === "visit" && field("visitDate", "Preferred visit date", "date")}
+                <div className="full col-span-2">
+                  <label htmlFor="message" className="form-label">
+                    Anything you’d like us to know?
+                  </label>
+                  <textarea
+                    id="message"
+                    name="message"
+                    maxLength={1500}
+                    rows={4}
+                    className="form-control"
+                    placeholder="Your questions, preferences, or plans…"
+                  />
+                </div>
+              </div>
+              <label className="flex gap-3 items-start mt-6 text-[11px] text-muted-foreground leading-relaxed">
+                <input type="checkbox" name="consent" className="mt-1 accent-primary" />I agree to
+                use my contact details to prepare this enquiry. In demo mode, details stay on this
+                page unless I download or share them. When live, they will be used only to respond
+                about rooms or visits.
+              </label>
+              {errors["consent"] && <p className="form-error">{errors["consent"]}</p>}
+              <Button type="submit" variant="hospitality" className="mt-6">
+                {intent === "visit" ? "Prepare Visit Request" : "Submit Enquiry"} <ArrowUpRight />
+              </Button>
+              <p className="sample-note mt-3">
+                Demo only · No payment taken · No booking confirmed
+              </p>
+            </form>
+            {notice && (
+              <div
+                role={Object.keys(errors).length ? "alert" : "status"}
+                className="demo-banner mt-6"
+              >
+                <p className="flex gap-2 items-start">
+                  {prepared && <CheckCircle2 className="size-4 shrink-0 mt-1" />}
+                  {notice}
+                </p>
+                {prepared && (
+                  <>
+                    <div className="border-t border-border mt-4 pt-4 text-xs leading-7">
+                      <p>
+                        {prepared.name} ·{" "}
+                        {rooms.find((r) => r.id === prepared.room)?.name || "Room to be decided"}
+                      </p>
+                      <p>Preferred move-in: {prepared.moveIn}</p>
+                      {prepared.visitDate && <p>Preferred visit: {prepared.visitDate}</p>}
+                    </div>
+                    <div className="flex flex-wrap gap-3 mt-4">
+                      <Button variant="soft" onClick={download}>
+                        <Download />
+                        Download Request
+                      </Button>
+                      <Button variant="soft" onClick={whatsapp}>
+                        <MessageCircle />
+                        WhatsApp Enquiry
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+      <section className="section bg-muted">
+        <div className="site-width max-w-4xl">
+          <h2 className="section-title mb-6">
+            Before you <em>move in.</em>
+          </h2>
+          <FAQList limit={3} />
+        </div>
+      </section>
+    </>
+  );
 }

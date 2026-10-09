@@ -1,20 +1,316 @@
-import { Link } from '@tanstack/react-router';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { ArrowRight, ArrowUpRight, BedDouble, Users, Check, Wifi, WashingMachine, Sparkles, BookOpen, Droplets, Utensils, Wind, Zap, Camera, KeyRound, Archive, Sofa, Heart, Flower2, Plus, Minus, Quote } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { rooms, amenities, imageryDisclosure, faqs, property, testimonials, type Room } from '@/data/property';
+import { Link } from "@tanstack/react-router";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  BedDouble,
+  Users,
+  Check,
+  Wifi,
+  WashingMachine,
+  Sparkles,
+  BookOpen,
+  Droplets,
+  Utensils,
+  Wind,
+  Zap,
+  Camera,
+  KeyRound,
+  Archive,
+  Sofa,
+  Heart,
+  Flower2,
+  Plus,
+  Minus,
+  Quote,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  rooms,
+  amenities,
+  imageryDisclosure,
+  faqs,
+  property,
+  testimonials,
+  type Room,
+} from "@/data/property";
 
-export function Reveal({children,className=''}:{children:ReactNode;className?:string}){
-  const ref=useRef<HTMLDivElement>(null);const [visible,setVisible]=useState(false);
-  useEffect(()=>{const node=ref.current;if(!node)return;const observer=new IntersectionObserver(entries=>{if(entries.some(e=>e.isIntersecting)){setVisible(true);observer.disconnect();}},{threshold:.08});observer.observe(node);return()=>observer.disconnect();},[]);
-  return <div ref={ref} className={`${className} ${visible?'reveal':''}`}>{children}</div>;
+export function Reveal({ children, className = "" }: { children: ReactNode; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.08 },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+  return (
+    <div ref={ref} className={`${className} ${visible ? "reveal" : ""}`}>
+      {children}
+    </div>
+  );
 }
-export function PageTop({eyebrow,title,description}:{eyebrow:string;title:string;description:string}){return <section className="page-top"><div className="site-width"><p className="eyebrow">{eyebrow}</p><h1>{title}</h1><p className="section-intro">{description}</p></div></section>;}
-export function PromiseStrip(){const items=[{icon:BedDouble,title:'Room for your everyday',sub:'Thoughtful room concepts'},{icon:BookOpen,title:'Space to grow',sub:'Study-friendly layouts'},{icon:Heart,title:'A sense of belonging',sub:'Shared living, your own space'},{icon:Flower2,title:'The little details',sub:'Comfort, thoughtfully considered'}];return <section className="promise-strip"><div className="site-width promise-grid">{items.map(i=><div className="promise-item" key={i.title}><i.icon/><div><strong>{i.title}</strong><span>{i.sub}</span></div></div>)}</div></section>;}
-export function RoomCard({room}:{room:Room}){return <article className="room-card"><Link to="/rooms/$roomId" params={{roomId:room.id}} className="block room-photo"><img src={room.image} width={1536} height={1024} loading="lazy" alt={`${room.name} — generated concept interior`}/><span className="image-badge">{room.capacity} residents · Sample layout</span></Link><div className="room-body"><div className="flex justify-between gap-2 items-center"><h3><Link to="/rooms/$roomId" params={{roomId:room.id}}>{room.name}</Link></h3><ArrowUpRight className="size-4"/></div><p className="detail-line mt-2"><BedDouble className="size-3"/>{room.arrangement}</p><ul className="room-features">{room.features.map(f=><li key={f}><Check className="size-3"/>{f}</li>)}</ul><div className="price-row"><div><p className="sample-note">Monthly rent</p><strong className="text-sm font-semibold">{room.monthlyRent||'Price on enquiry'}</strong></div><span className="sample-note text-right">{room.availability||'Availability to be confirmed'}</span></div><Button variant="soft" className="w-full" asChild><Link to="/contact" search={{intent:'enquiry',room:room.id}}>Enquire About This Room <ArrowRight/></Link></Button></div></article>;}
-export function RoomsSection(){return <section className="section"><div className="site-width"><div className="flex flex-wrap justify-between items-end gap-6 mb-9"><div><p className="eyebrow mb-4">Made for the way you live</p><h2 className="section-title">Find your kind of <em>comfort.</em></h2><p className="section-intro mt-4">Different ways to share. The same feeling of home.</p></div><Button variant="link" asChild><Link to="/rooms">Explore all rooms <ArrowUpRight/></Link></Button></div><Reveal className="room-grid">{rooms.map(room=><RoomCard key={room.id} room={room}/>)}</Reveal><p className="sample-note mt-5">{imageryDisclosure} Room layouts, rent and availability are editable samples awaiting owner confirmation.</p></div></section>;}
-const icons:Record<string,typeof Wifi>={wifi:Wifi,laundry:WashingMachine,clean:Sparkles,study:BookOpen,water:Droplets,meals:Utensils,air:Wind,power:Zap,cctv:Camera,entry:KeyRound,wardrobe:Archive,lounge:Sofa};
-export function AmenitiesGrid(){const confirmed=amenities.filter(a=>a.confirmed);const list=confirmed.length?confirmed:amenities;return <><div className="amenity-grid">{list.map(a=>{const Icon=icons[a.icon]||Flower2;return <div className="amenity" key={a.name}><Icon/><strong>{a.name}</strong><span>{a.confirmed?'Confirmed by owner':'Not yet confirmed'}</span></div>;})}</div>{confirmed.length===0&&<p className="sample-note">Amenity checklist only. No facilities are confirmed for the property yet.</p>}</>;}
-export function SafetySection(){return <section className="section bg-secondary"><div className="site-width"><div className="editorial"><div><p className="eyebrow mb-5">Peace of mind starts with clarity</p><h2 className="section-title">Comfort that lets you<br/>focus on <em>what matters.</em></h2><p className="section-intro mt-5">Your questions deserve clear answers. Before you choose a room, review the property’s confirmed policies and access arrangements.</p><Button variant="soft" className="mt-6" asChild><Link to="/contact" search={{intent:'enquiry',room:'undecided'}}>Ask us a question <ArrowUpRight/></Link></Button></div><div className="policy-list">{property.policies.map(p=><div className="policy-item" key={p.title}><h3>{p.title}</h3><p>{p.value||'Awaiting owner confirmation.'}</p></div>)}</div></div></div></section>;}
-export function FAQList({limit}:{limit?:number}){const [open,setOpen]=useState<number|null>(null);return <div>{faqs.slice(0,limit).map((f,i)=><div className="faq-item" key={f.question}><Button variant="ghost" className="faq-question" aria-expanded={open===i} aria-controls={`faq-${i}`} onClick={()=>setOpen(open===i?null:i)}>{f.question}{open===i?<Minus className="shrink-0"/>:<Plus className="shrink-0"/>}</Button>{open===i&&<div id={`faq-${i}`} className="faq-answer">{f.answer||'This policy has not yet been provided by the property owner. Please confirm the details before making a booking.'}</div>}</div>)}</div>;}
-export function Reviews(){return <section className="section"><div className="site-width"><div className="text-center mb-9"><p className="eyebrow mb-4">Stories from a shared home</p><h2 className="section-title">Little moments. <em>Lasting connections.</em></h2><p className="sample-note mt-4">Sample testimonials — genuine resident reviews will replace these.</p></div><div className="grid md:grid-cols-2 gap-10 max-w-4xl mx-auto">{testimonials.map(t=><div key={t.name} className="border-t border-border pt-6"><Quote className="size-6 text-primary mb-4"/><p className="display text-3xl leading-snug">“{t.quote}”</p><p className="text-xs font-semibold mt-5">{t.name}</p><p className="sample-note mt-1">{t.role}</p></div>)}</div></div></section>;}
+export function PageTop({
+  eyebrow,
+  title,
+  description,
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+}) {
+  return (
+    <section className="page-top">
+      <div className="site-width">
+        <p className="eyebrow">{eyebrow}</p>
+        <h1>{title}</h1>
+        <p className="section-intro">{description}</p>
+      </div>
+    </section>
+  );
+}
+export function PromiseStrip() {
+  const items = [
+    { icon: BedDouble, title: "Room for your everyday", sub: "Thoughtful room concepts" },
+    { icon: BookOpen, title: "Space to grow", sub: "Study-friendly layouts" },
+    { icon: Heart, title: "A sense of belonging", sub: "Shared living, your own space" },
+    { icon: Flower2, title: "The little details", sub: "Comfort, thoughtfully considered" },
+  ];
+  return (
+    <section className="promise-strip">
+      <div className="site-width promise-grid">
+        {items.map((i) => (
+          <div className="promise-item" key={i.title}>
+            <i.icon />
+            <div>
+              <strong>{i.title}</strong>
+              <span>{i.sub}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+export function RoomCard({ room }: { room: Room }) {
+  return (
+    <article className="room-card">
+      <Link to="/rooms/$roomId" params={{ roomId: room.id }} className="block room-photo">
+        <img
+          src={room.image}
+          width={1536}
+          height={1024}
+          loading="lazy"
+          alt={`${room.name} — generated concept interior`}
+        />
+        <span className="image-badge">{room.capacity} residents · Sample layout</span>
+      </Link>
+      <div className="room-body">
+        <div className="flex justify-between gap-2 items-center">
+          <h3>
+            <Link to="/rooms/$roomId" params={{ roomId: room.id }}>
+              {room.name}
+            </Link>
+          </h3>
+          <ArrowUpRight className="size-4" />
+        </div>
+        <p className="detail-line mt-2">
+          <BedDouble className="size-3" />
+          {room.arrangement}
+        </p>
+        <ul className="room-features">
+          {room.features.map((f) => (
+            <li key={f}>
+              <Check className="size-3" />
+              {f}
+            </li>
+          ))}
+        </ul>
+        <div className="price-row">
+          <div>
+            <p className="sample-note">Monthly rent</p>
+            <strong className="text-sm font-semibold">
+              {room.monthlyRent || "Price on enquiry"}
+            </strong>
+          </div>
+          <span className="sample-note text-right">
+            {room.availability || "Availability to be confirmed"}
+          </span>
+        </div>
+        <Button variant="soft" className="w-full" asChild>
+          <Link to="/contact" search={{ intent: "enquiry", room: room.id }}>
+            Enquire About This Room <ArrowRight />
+          </Link>
+        </Button>
+      </div>
+    </article>
+  );
+}
+export function RoomsSection() {
+  return (
+    <section className="section">
+      <div className="site-width">
+        <div className="flex flex-wrap justify-between items-end gap-6 mb-9">
+          <div>
+            <p className="eyebrow mb-4">Made for the way you live</p>
+            <h2 className="section-title">
+              Find your kind of <em>comfort.</em>
+            </h2>
+            <p className="section-intro mt-4">Different ways to share. The same feeling of home.</p>
+          </div>
+          <Button variant="link" asChild>
+            <Link to="/rooms">
+              Explore all rooms <ArrowUpRight />
+            </Link>
+          </Button>
+        </div>
+        <Reveal className="room-grid">
+          {rooms.map((room) => (
+            <RoomCard key={room.id} room={room} />
+          ))}
+        </Reveal>
+        <p className="sample-note mt-5">
+          {imageryDisclosure} Room layouts, rent and availability are editable samples awaiting
+          owner confirmation.
+        </p>
+      </div>
+    </section>
+  );
+}
+const icons: Record<string, typeof Wifi> = {
+  wifi: Wifi,
+  laundry: WashingMachine,
+  clean: Sparkles,
+  study: BookOpen,
+  water: Droplets,
+  meals: Utensils,
+  air: Wind,
+  power: Zap,
+  cctv: Camera,
+  entry: KeyRound,
+  wardrobe: Archive,
+  lounge: Sofa,
+};
+export function AmenitiesGrid() {
+  const confirmed = amenities.filter((a) => a.confirmed);
+  const list = confirmed.length ? confirmed : amenities;
+  return (
+    <>
+      <div className="amenity-grid">
+        {list.map((a) => {
+          const Icon = icons[a.icon] || Flower2;
+          return (
+            <div className="amenity" key={a.name}>
+              <Icon />
+              <strong>{a.name}</strong>
+              <span>{a.confirmed ? "Confirmed by owner" : "Not yet confirmed"}</span>
+            </div>
+          );
+        })}
+      </div>
+      {confirmed.length === 0 && (
+        <p className="sample-note">
+          Amenity checklist only. No facilities are confirmed for the property yet.
+        </p>
+      )}
+    </>
+  );
+}
+export function SafetySection() {
+  return (
+    <section className="section bg-secondary">
+      <div className="site-width">
+        <div className="editorial">
+          <div>
+            <p className="eyebrow mb-5">Peace of mind starts with clarity</p>
+            <h2 className="section-title">
+              Comfort that lets you
+              <br />
+              focus on <em>what matters.</em>
+            </h2>
+            <p className="section-intro mt-5">
+              Your questions deserve clear answers. Before you choose a room, review the property’s
+              confirmed policies and access arrangements.
+            </p>
+            <Button variant="soft" className="mt-6" asChild>
+              <Link to="/contact" search={{ intent: "enquiry", room: "undecided" }}>
+                Ask us a question <ArrowUpRight />
+              </Link>
+            </Button>
+          </div>
+          <div className="policy-list">
+            {property.policies.map((p) => (
+              <div className="policy-item" key={p.title}>
+                <h3>{p.title}</h3>
+                <p>{p.value || "Awaiting owner confirmation."}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+export function FAQList({ limit }: { limit?: number }) {
+  const [open, setOpen] = useState<number | null>(null);
+  return (
+    <div>
+      {faqs.slice(0, limit).map((f, i) => (
+        <div className="faq-item" key={f.question}>
+          <Button
+            variant="ghost"
+            className="faq-question"
+            aria-expanded={open === i}
+            aria-controls={`faq-${i}`}
+            onClick={() => setOpen(open === i ? null : i)}
+          >
+            {f.question}
+            {open === i ? <Minus className="shrink-0" /> : <Plus className="shrink-0" />}
+          </Button>
+          {open === i && (
+            <div id={`faq-${i}`} className="faq-answer">
+              {f.answer ||
+                "This policy has not yet been provided by the property owner. Please confirm the details before making a booking."}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+export function Reviews() {
+  return (
+    <section className="section">
+      <div className="site-width">
+        <div className="text-center mb-9">
+          <p className="eyebrow mb-4">Stories from a shared home</p>
+          <h2 className="section-title">
+            Little moments. <em>Lasting connections.</em>
+          </h2>
+          <p className="sample-note mt-4">
+            Sample testimonials — genuine resident reviews will replace these.
+          </p>
+        </div>
+        <div className="grid md:grid-cols-2 gap-10 max-w-4xl mx-auto">
+          {testimonials.map((t) => (
+            <div key={t.name} className="border-t border-border pt-6">
+              <Quote className="size-6 text-primary mb-4" />
+              <p className="display text-3xl leading-snug">“{t.quote}”</p>
+              <p className="text-xs font-semibold mt-5">{t.name}</p>
+              <p className="sample-note mt-1">{t.role}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
